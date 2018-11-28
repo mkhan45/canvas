@@ -8,9 +8,13 @@
     tools:context=".MainActivity"
     tools:showIn="@layout/app_bar_main">
 
-    <com.example.a2020mkhan.canvaslab2.canvasView
-        android:id="@+id/canvas"
+
+    <FrameLayout
+        android:id="@+id/frame"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+    </FrameLayout>
+
+
 
 </android.support.constraint.ConstraintLayout>
