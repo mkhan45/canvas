@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -24,11 +25,11 @@ public class canvasFrag extends Fragment{
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.canvas_layout, container, false);
         SharedPreferences sp = getActivity().getSharedPreferences("canvasPreferences", Context.MODE_PRIVATE);
+        canvasView canvas = (canvasView) rootView.findViewById(R.id.canvas);
 
         if (sp.contains("bmp")) {
 
             Gson gson = new Gson();
-            canvasView canvas = (canvasView) rootView.findViewById(R.id.canvas);
             String encoded = sp.getString("bmp", null);
             Log.i("tag", encoded);
             byte[] bmpBytes = Base64.decode(encoded.getBytes(), Base64.DEFAULT);
@@ -36,7 +37,14 @@ public class canvasFrag extends Fragment{
             canvas.setBitmap(bmp);
         }
 
+        if(sp.contains("color")){
+            try {
+                canvas.setPaintColor(Color.parseColor(sp.getString("color", "#000000")));
+            }catch (Exception e){
+                canvas.setPaintColor(Color.BLACK);
+            }
+        }
+
         return rootView;
     }
-
 }

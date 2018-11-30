@@ -89,4 +89,5 @@ public class canvasView extends View {
     void setPaintColor(int c){
         paint.setColor(c);
     }
+
 }
