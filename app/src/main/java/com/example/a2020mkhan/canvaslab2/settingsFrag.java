@@ -17,6 +17,7 @@ import android.widget.SeekBar;
 
 public class settingsFrag extends Fragment{
 
+    settingsInterface mCallback;
     SeekBar red, green, blue;
 
     public settingsFrag(){}
@@ -35,20 +36,28 @@ public class settingsFrag extends Fragment{
         blue.setMax(255);
 
         SharedPreferences sp = getActivity().getSharedPreferences("canvasPreferences", Context.MODE_PRIVATE);
+        Log.i("settingsCreate", sp.getString("color", "nope"));
         if(sp.contains("color")){
-            String colorString = sp.getString("color", "#FFFFFF").substring(1);
+            String colorString = sp.getString("color", "FFFFFF");
             Log.i("Tag", colorString);
 
-            red.setProgress(Integer.parseInt(colorString.substring(0,2), 16));
-            green.setProgress(Integer.parseInt(colorString.substring(2,4), 16));
-            blue.setProgress(Integer.parseInt(colorString.substring(4,6), 16));
+            try {
+                red.setProgress(Integer.parseInt(colorString.substring(0, 2), 16));
+                green.setProgress(Integer.parseInt(colorString.substring(2, 4), 16));
+                blue.setProgress(Integer.parseInt(colorString.substring(4, 6), 16));
+            }catch(Exception e){
+                colorString = "#FFFFFF";
+            }
         }
 
+        Button reset = (Button) rootView.findViewById(R.id.reset);
+        reset.setOnClickListener(resetMethod);
 
         Button save = (Button) rootView.findViewById(R.id.save);
         save.setOnClickListener(saveSettings);
         return rootView;
     }
+
 
     public View.OnClickListener saveSettings = new View.OnClickListener() {
         @Override
@@ -58,20 +67,30 @@ public class settingsFrag extends Fragment{
             String redVal, greenVal, blueVal;
 
             if(red.getProgress() != 0)
-                redVal = Integer.toHexString(red.getProgress());
+                redVal = String.format("%02X", red.getProgress());
             else
                 redVal = "00";
             if(green.getProgress() != 0)
-                greenVal = Integer.toHexString(green.getProgress());
+                greenVal = String.format("%02X", green.getProgress());
             else greenVal = "00";
             if(blue.getProgress() != 0)
-                blueVal = Integer.toHexString(blue.getProgress());
+               blueVal = String.format("%02X", blue.getProgress());
             else blueVal = "00";
 
-            sp.edit().putString("color", "" + redVal + greenVal + blueVal).apply();
-            Log.i("Color", redVal + " " + greenVal + " " + " " + blueVal);
+            sp.edit().putString("color", colorString).commit();
+            Log.i("Color", sp.getString("color", "error"));
+        }
+    };
+
+    public View.OnClickListener resetMethod = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mCallback.resetCanvas();
         }
     };
 
 
+    public interface settingsInterface{
+        void resetCanvas();
+    }
 }

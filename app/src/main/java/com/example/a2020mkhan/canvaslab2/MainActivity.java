@@ -28,8 +28,8 @@ import com.google.gson.Gson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements settingsFrag.settingsInterface,
+         NavigationView.OnNavigationItemSelectedListener{
 
     canvasView cv;
     @Override
@@ -113,5 +113,9 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void resetCanvas(){
+
     }
 }

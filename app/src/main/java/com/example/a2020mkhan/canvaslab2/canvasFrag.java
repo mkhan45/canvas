@@ -20,18 +20,19 @@ import com.google.gson.Gson;
 public class canvasFrag extends Fragment{
     public canvasFrag(){}
 
+    canvasView canvas;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.canvas_layout, container, false);
         SharedPreferences sp = getActivity().getSharedPreferences("canvasPreferences", Context.MODE_PRIVATE);
-        canvasView canvas = (canvasView) rootView.findViewById(R.id.canvas);
+        canvas = (canvasView) rootView.findViewById(R.id.canvas);
 
         if (sp.contains("bmp")) {
 
             Gson gson = new Gson();
             String encoded = sp.getString("bmp", null);
-            Log.i("tag", encoded);
             byte[] bmpBytes = Base64.decode(encoded.getBytes(), Base64.DEFAULT);
             Bitmap bmp = BitmapFactory.decodeByteArray(bmpBytes, 0, bmpBytes.length);
             canvas.setBitmap(bmp);
@@ -40,11 +41,16 @@ public class canvasFrag extends Fragment{
         if(sp.contains("color")){
             try {
                 canvas.setPaintColor(Color.parseColor(sp.getString("color", "#000000")));
+                Log.i("foundColor", sp.getString("color", "#FFFFFF"));
             }catch (Exception e){
                 canvas.setPaintColor(Color.BLACK);
             }
         }
 
         return rootView;
+    }
+
+    public void reset(){
+        canvas.reset();
     }
 }

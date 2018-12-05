@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -20,6 +21,8 @@ public class canvasView extends View {
     private Canvas canvas;
     private Bitmap bitmap;
     private Paint bitmapPaint;
+    private int width;
+    private int height;
 
     public canvasView(Context context, AttributeSet attributes){
         super(context, attributes);
@@ -33,6 +36,8 @@ public class canvasView extends View {
 
     protected void onSizeChanged(int w, int h, int oldw, int oldh){
         super.onSizeChanged(w, h, oldw, oldh);
+        width = w;
+        height = h;
         if(bitmap == null)
             bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         canvas = new Canvas(bitmap);
@@ -88,6 +93,10 @@ public class canvasView extends View {
 
     void setPaintColor(int c){
         paint.setColor(c);
+    }
+
+    public void reset(){
+        bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
     }
 
 }
