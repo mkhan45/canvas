@@ -38,19 +38,24 @@ public class canvasFrag extends Fragment{
             canvas.setBitmap(bmp);
         }
 
-        if(sp.contains("color")){
-            try {
-                canvas.setPaintColor(Color.parseColor(sp.getString("color", "#000000")));
-                Log.i("foundColor", sp.getString("color", "#FFFFFF"));
-            }catch (Exception e){
-                canvas.setPaintColor(Color.BLACK);
-            }
-        }
 
         return rootView;
     }
 
-    public void reset(){
+    public void canvasReset(){
+        Log.i("reset", "reset");
         canvas.reset();
+    }
+
+    public void setColor(int c){
+        canvas.setPaintColor(c);
+    }
+
+    public void setBackground(Bitmap bmp){
+        canvas.changeBitmap(bmp);
+    }
+
+    public void colorCycle(){
+        canvas.startColorCycle();
     }
 }

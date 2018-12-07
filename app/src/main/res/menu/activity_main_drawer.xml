@@ -8,5 +8,22 @@
             android:id="@+id/settings"
             android:icon="@drawable/ic_menu_camera"
             android:title="Import" />
+
+
+        <item
+            android:id="@+id/reset"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Reset"/>
+
+        <item
+            android:id="@+id/background"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Background"/>
+
+        <item
+            android:id="@+id/colorCycle"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="Surprise"/>
+
     </group>
 </menu>

@@ -1,11 +1,13 @@
 package com.example.a2020mkhan.canvaslab2;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -31,7 +33,7 @@ import java.io.ByteArrayOutputStream;
 public class MainActivity extends AppCompatActivity implements settingsFrag.settingsInterface,
          NavigationView.OnNavigationItemSelectedListener{
 
-    canvasView cv;
+    canvasFrag cf;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements settingsFrag.sett
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        canvasFrag cf = new canvasFrag();
+        cf = new canvasFrag();
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
         ft.setTransition(android.R.anim.linear_interpolator);
@@ -108,6 +110,13 @@ public class MainActivity extends AppCompatActivity implements settingsFrag.sett
             ft.setTransition(android.R.anim.linear_interpolator);
             ft.replace(R.id.frame, sf).addToBackStack(null).commit();
             Log.i("TAg" ,"settubgs");
+        }else if (id == R.id.reset){
+            cf.canvasReset();
+        }else if (id == R.id.background){
+            Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            startActivityForResult(cameraIntent, 0);
+        }else if (id == R.id.colorCycle){
+            cf.colorCycle();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -115,7 +124,27 @@ public class MainActivity extends AppCompatActivity implements settingsFrag.sett
         return true;
     }
 
-    public void resetCanvas(){
+    public void onAttachFragment(Fragment fragment){
+        if(fragment instanceof settingsFrag){
+            settingsFrag sf = (settingsFrag) fragment;
+            sf.setListener(this);
+        }
+    }
 
+    public void resetImage(){
+        cf.canvasReset();
+    }
+
+    public void setColor(String c){
+        int color = Color.parseColor("#" + c);
+        cf.setColor(color);
+    }
+
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 0) {
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            cf.setBackground(photo);
+        }
     }
 }

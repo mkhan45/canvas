@@ -14,6 +14,8 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.util.logging.Handler;
+
 public class canvasView extends View {
 
     private Paint paint;
@@ -30,7 +32,10 @@ public class canvasView extends View {
         setFocusableInTouchMode(true);
         path = new Path();
         bitmapPaint = new Paint(Paint.DITHER_FLAG);
-        setPaint();
+        SharedPreferences sp = getContext().getSharedPreferences("canvasPreferences", 0);
+        if(paint == null)
+            setPaint();
+        Log.i("Color on instantiate", sp.getString("color", "null"));
     }
 
 
@@ -74,16 +79,28 @@ public class canvasView extends View {
         bitmap = bmp.copy(Bitmap.Config.ARGB_8888, true);
     }
 
+    public void changeBitmap(Bitmap bmp){
+        int w = getWidth();
+        int h = getHeight();
+        Rect src = new Rect(0, 0, bmp.getWidth()-1, bmp.getHeight()-1);
+        Rect dest = new Rect(0, 0, width-1, height-1);
+        canvas.drawBitmap(bmp, src, dest, bitmapPaint);
+    }
+
 
     protected void onDraw(Canvas canvas){
         canvas.drawBitmap(bitmap, 0, 0, bitmapPaint);
+        Log.i("paint color", paint.getColor() + "");
         canvas.drawPath(path, paint);
     }
 
     private void setPaint(){
         Log.i("setting paint", "");
+
+
+        SharedPreferences sp = getContext().getSharedPreferences("canvasPreferences", 0);
         paint = new Paint();
-        paint.setColor(Color.rgb(0, 0, 0));
+        setPaintColor(Color.parseColor("#" + sp.getString("color", "FFFFFF")));
         paint.setAntiAlias(true);
         paint.setStrokeWidth(5);
         paint.setStrokeJoin(Paint.Join.ROUND);
@@ -92,11 +109,31 @@ public class canvasView extends View {
     }
 
     void setPaintColor(int c){
+        Log.i("changing color" ,c + "");
         paint.setColor(c);
+        Log.i("color changed", paint.getColor() + "");
     }
 
     public void reset(){
-        bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        canvas.drawColor(Color.WHITE);
     }
+
+    final Runnable r = new Runnable() {
+        android.os.Handler h = new android.os.Handler();
+        int c = Color.BLACK;
+
+        @Override
+        public void run() {
+            canvas.drawColor(c);
+            Log.i("color changing", c + "");
+            c += 1000;
+            h.postDelayed(this, 1);
+        }
+    };
+
+    public void startColorCycle(){
+        r.run();
+    }
+
 
 }
