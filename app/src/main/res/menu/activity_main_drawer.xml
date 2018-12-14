@@ -25,5 +25,10 @@
             android:icon="@drawable/ic_menu_slideshow"
             android:title="Surprise"/>
 
+        <item
+            android:id="@+id/blur"
+            android:icon="@drawable/ic_menu_share"
+            android:title="blur"/>
+
     </group>
 </menu>

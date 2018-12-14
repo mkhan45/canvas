@@ -1,14 +1,21 @@
 package com.example.a2020mkhan.canvaslab2;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Process;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicBlur;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -25,34 +32,38 @@ public class canvasView extends View {
     private Paint bitmapPaint;
     private int width;
     private int height;
+    private boolean blur;
 
-    public canvasView(Context context, AttributeSet attributes){
+    public canvasView(Context context, AttributeSet attributes) {
         super(context, attributes);
         setFocusable(true);
         setFocusableInTouchMode(true);
         path = new Path();
         bitmapPaint = new Paint(Paint.DITHER_FLAG);
         SharedPreferences sp = getContext().getSharedPreferences("canvasPreferences", 0);
-        if(paint == null)
+        if (paint == null)
             setPaint();
-        Log.i("Color on instantiate", sp.getString("color", "null"));
+
+
+        //saveService ss = new saveService();
+        //ss.startService(new Intent());
     }
 
 
-    protected void onSizeChanged(int w, int h, int oldw, int oldh){
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         width = w;
         height = h;
-        if(bitmap == null)
+        if (bitmap == null)
             bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         canvas = new Canvas(bitmap);
     }
 
-    public boolean onTouchEvent(MotionEvent event){
+    public boolean onTouchEvent(MotionEvent event) {
         float pointX = event.getX();
         float pointY = event.getY();
 
-        switch (event.getAction()){
+        switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 path.reset();
                 path.moveTo(pointX, pointY);
@@ -64,8 +75,8 @@ public class canvasView extends View {
                 path.lineTo(pointX, pointY);
                 canvas.drawPath(path, paint);
                 path.reset();
-             default:
-                    return false;
+            default:
+                return false;
         }
         postInvalidate();
         return true;
@@ -75,26 +86,25 @@ public class canvasView extends View {
         return bitmap;
     }
 
-    public void setBitmap(Bitmap bmp){
+    public void setBitmap(Bitmap bmp) {
         bitmap = bmp.copy(Bitmap.Config.ARGB_8888, true);
     }
 
-    public void changeBitmap(Bitmap bmp){
+    public void changeBitmap(Bitmap bmp) {
         int w = getWidth();
         int h = getHeight();
-        Rect src = new Rect(0, 0, bmp.getWidth()-1, bmp.getHeight()-1);
-        Rect dest = new Rect(0, 0, width-1, height-1);
+        Rect src = new Rect(0, 0, bmp.getWidth() - 1, bmp.getHeight() - 1);
+        Rect dest = new Rect(0, 0, width - 1, height - 1);
         canvas.drawBitmap(bmp, src, dest, bitmapPaint);
     }
 
 
-    protected void onDraw(Canvas canvas){
+    protected void onDraw(Canvas canvas) {
         canvas.drawBitmap(bitmap, 0, 0, bitmapPaint);
-        Log.i("paint color", paint.getColor() + "");
         canvas.drawPath(path, paint);
     }
 
-    private void setPaint(){
+    private void setPaint() {
         Log.i("setting paint", "");
 
 
@@ -108,13 +118,11 @@ public class canvasView extends View {
         paint.setStyle(Paint.Style.STROKE);
     }
 
-    void setPaintColor(int c){
-        Log.i("changing color" ,c + "");
+    void setPaintColor(int c) {
         paint.setColor(c);
-        Log.i("color changed", paint.getColor() + "");
     }
 
-    public void reset(){
+    public void reset() {
         canvas.drawColor(Color.WHITE);
     }
 
@@ -125,15 +133,46 @@ public class canvasView extends View {
         @Override
         public void run() {
             canvas.drawColor(c);
-            Log.i("color changing", c + "");
             c += 1000;
             h.postDelayed(this, 1);
         }
     };
 
-    public void startColorCycle(){
-        r.run();
+    public void startColorCycle() {
+        Thread runColor = new Thread(r);
+        runColor.start();
     }
+
+    public void blur() {
+        Thread blurThread = new Thread(blurRunnable);
+        blurThread.start();
+        draw(canvas);
+    }
+
+
+    final Runnable blurRunnable = new Runnable() {
+        @Override
+        public void run() {
+            android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+
+            Bitmap in = Bitmap.createScaledBitmap(bitmap, width, height, false);
+            Bitmap out = Bitmap.createBitmap(bitmap);
+
+            RenderScript rs = RenderScript.create(getContext());
+            ScriptIntrinsicBlur blur = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
+            Allocation tmpIn = Allocation.createFromBitmap(rs, in);
+            Allocation tmpOut = Allocation.createFromBitmap(rs, out);
+            blur.setRadius(25);
+            blur.setInput(tmpIn);
+            blur.forEach(tmpOut);
+            tmpOut.copyTo(out);
+
+            changeBitmap(out);
+        }
+    };
+
 
 
 }

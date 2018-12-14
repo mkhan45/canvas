@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
@@ -29,11 +30,14 @@ import com.google.gson.Gson;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements settingsFrag.settingsInterface,
-         NavigationView.OnNavigationItemSelectedListener{
+        NavigationView.OnNavigationItemSelectedListener {
 
     canvasFrag cf;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +59,25 @@ public class MainActivity extends AppCompatActivity implements settingsFrag.sett
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        final Intent saveIntent = new Intent();
+        saveIntent.setClass(this, saveService.class);
+        startService(saveIntent);
+
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (findViewById(R.id.canvas) != null) {
+                    try {
+                        Bitmap bmp = ((canvasView) findViewById(R.id.canvas)).getBitmap();
+                        if(bmp == null)
+                            Log.i("???", "???????????");
+                        Uri bmpuri = getImageUri(getApplicationContext(), bmp);
+                        saveIntent.putExtra("uri", bmpuri);
+                    }catch (Exception e){}
+                }
+            }
+        }, 0, 10000);
     }
 
     @Override
@@ -98,25 +121,26 @@ public class MainActivity extends AppCompatActivity implements settingsFrag.sett
             SharedPreferences sp = getSharedPreferences("canvasPreferences", Context.MODE_PRIVATE);
             Bitmap bmp = ((canvasView) findViewById(R.id.canvas)).getBitmap();
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bmp.compress(Bitmap.CompressFormat.PNG, 100, baos);
-            byte[] b = baos.toByteArray();
-            String encoded = Base64.encodeToString(b, Base64.DEFAULT);
-            sp.edit().putString("bmp", encoded).commit();
+            saveRunnable sr = new saveRunnable();
+            sr.setup(bmp, sp);
+            Thread saveThread = new Thread(sr);
+            saveThread.start();
 
             settingsFrag sf = new settingsFrag();
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction ft = fm.beginTransaction();
             ft.setTransition(android.R.anim.linear_interpolator);
             ft.replace(R.id.frame, sf).addToBackStack(null).commit();
-            Log.i("TAg" ,"settubgs");
-        }else if (id == R.id.reset){
+            Log.i("TAg", "settubgs");
+        } else if (id == R.id.reset) {
             cf.canvasReset();
-        }else if (id == R.id.background){
+        } else if (id == R.id.background) {
             Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             startActivityForResult(cameraIntent, 0);
-        }else if (id == R.id.colorCycle){
+        } else if (id == R.id.colorCycle) {
             cf.colorCycle();
+        } else if (id == R.id.blur) {
+            cf.blur();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -124,18 +148,19 @@ public class MainActivity extends AppCompatActivity implements settingsFrag.sett
         return true;
     }
 
-    public void onAttachFragment(Fragment fragment){
-        if(fragment instanceof settingsFrag){
+    public void onAttachFragment(Fragment fragment) {
+        if (fragment instanceof settingsFrag) {
             settingsFrag sf = (settingsFrag) fragment;
             sf.setListener(this);
         }
     }
 
-    public void resetImage(){
+
+    public void resetImage() {
         cf.canvasReset();
     }
 
-    public void setColor(String c){
+    public void setColor(String c) {
         int color = Color.parseColor("#" + c);
         cf.setColor(color);
     }
@@ -147,4 +172,13 @@ public class MainActivity extends AppCompatActivity implements settingsFrag.sett
             cf.setBackground(photo);
         }
     }
+
+    public Uri getImageUri(Context inContext, Bitmap inImage) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
+    }
+
+
 }

@@ -58,4 +58,9 @@ public class canvasFrag extends Fragment{
     public void colorCycle(){
         canvas.startColorCycle();
     }
+
+    public void blur(){
+        canvas.blur();
+    }
+
 }
