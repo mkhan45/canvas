@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Process;
 import android.renderscript.Allocation;
@@ -18,9 +19,11 @@ import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.util.ArrayList;
 import java.util.logging.Handler;
 
 public class canvasView extends View {
@@ -146,7 +149,7 @@ public class canvasView extends View {
     public void blur() {
         Thread blurThread = new Thread(blurRunnable);
         blurThread.start();
-        draw(canvas);
+        canvas.drawBitmap(bitmap, 0, 0, bitmapPaint);
     }
 
 
@@ -173,6 +176,76 @@ public class canvasView extends View {
         }
     };
 
+    final Runnable blur2 = new Runnable() {
+        @Override
+        public void run() {
+            blur3(getBitmap(), 2);
+        }
+    };
+
+    public void blurImage2(Bitmap bmp, int rad){
+        int width = bmp.getWidth();
+        int height = bmp.getHeight();
+        Bitmap bmp2 = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+        for (int y = 0; y < height; y++){
+            int minY = (y - rad < 0) ? 0 : (y-rad);
+            int maxY = (y + rad > height - 1) ? height - 1 : (y+rad);
+
+            for (int x = 0; x < width; x++){
+                int minX = (x - rad < 0) ? 0 : (x-rad);
+                int maxX = (x + rad > height - 1) ? (x+rad) : (width-1);
+                int r = 0;
+                int g = 0;
+                int b = 0;
+
+                for(int yi = minY; yi < maxY; yi++){
+                    for(int xi = minX; xi < maxX; xi++){
+                       int pixel = bmp.getPixel(xi, yi);
+                       r += Color.red(pixel);
+                       g += Color.green(pixel);
+                       b += Color.red(pixel);
+                    }
+                }
+
+                r = (int) Math.floor((r/Math.pow(2, rad)));
+                g = (int) Math.floor((g/Math.pow(2, rad)));
+                b = (int) Math.floor((b/Math.pow(2, rad)));
+
+                if(Color.rgb(r, g, b) != bmp.getPixel(x, y))
+                    bmp2.setPixel(x, y, Color.rgb(r, g, b));
+                Log.i("blur", "blurring" + x + ", " + y);
+            }
+        }
+
+        changeBitmap(bmp2);
+    }
+
+    public void blur3(Bitmap bmp, int fac){
+        Bitmap bmp2 = Bitmap.createScaledBitmap(bmp, bmp.getWidth()/fac, bmp.getHeight()/fac, false);
+        changeBitmap(Bitmap.createScaledBitmap(bmp2, bmp.getWidth(), bmp.getHeight(), false));
+    }
+
+    public void fftBlur(){
+
+    }
+
+    public Pair<Bitmap, int[]> getInside(Path path){
+        RectF rectF = new RectF();
+        path.computeBounds(rectF, true);
+        Bitmap bmpOut = Bitmap.createBitmap((int) rectF.width(), (int) rectF.height(), Bitmap.Config.ARGB_8888);
+        int[] coords = {(int)rectF.left, (int)rectF.top};
+
+        int x = 0, y = 0;
+        for(int r = coords[1]; r < rectF.bottom - 1; r++){
+            for(int c = coords[0]; r < rectF.right - 1; c++){
+                bmpOut.setPixel(x, y, bitmap.getPixel(r, c));
+            }
+        }
+
+
+        return new Pair<>(bmpOut, coords);
+    }
 
 
 }
