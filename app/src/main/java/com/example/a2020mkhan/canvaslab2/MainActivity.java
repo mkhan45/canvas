@@ -141,6 +141,14 @@ public class MainActivity extends AppCompatActivity implements settingsFrag.sett
             cf.colorCycle();
         } else if (id == R.id.blur) {
             cf.blur();
+        } else if (id == R.id.importImage){
+            Intent mediaIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+
+            mediaIntent.addCategory(Intent.CATEGORY_OPENABLE);
+
+            mediaIntent.setType("image/*");
+
+            startActivityForResult(mediaIntent, 1);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -170,6 +178,12 @@ public class MainActivity extends AppCompatActivity implements settingsFrag.sett
         if (requestCode == 0) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
             cf.setBackground(photo);
+        }else if (requestCode == 1){
+            try {
+                Uri uri = (Uri) data.getExtras().get("data");
+                Bitmap bmpTemp = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
+                cf.setBackground(bmpTemp);
+            }catch (Exception e){}
         }
     }
 

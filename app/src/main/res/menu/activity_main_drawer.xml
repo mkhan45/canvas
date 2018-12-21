@@ -30,5 +30,10 @@
             android:icon="@drawable/ic_menu_share"
             android:title="blur"/>
 
+        <item
+            android:id="@+id/importImage"
+            android:icon="@android:drawable/ic_menu_report_image"
+            android:title="import"/>
+
     </group>
 </menu>
